@@ -1,0 +1,34 @@
+[
+  {
+    "table_name": "teams",
+    "url": "https://api.opendota.com/api/teams"
+  },
+  {
+    "table_name": "pro_players",
+    "url": "https://api.opendota.com/api/proPlayers"
+  },
+  {
+    "table_name": "leagues",
+    "url": "https://api.opendota.com/api/leagues"
+  },
+  {
+    "table_name": "heroes",
+    "url": "https://api.opendota.com/api/heroes"
+  },
+  {
+    "table_name": "pro_matches",
+    "url": "https://api.opendota.com/api/proMatches"
+  },
+  {
+    "table_name": "matches",
+    "url": "https://api.opendota.com/api/matches/<id>"
+  },
+  {
+    "table_name": "pro_players_heroes",
+    "url": "https://api.opendota.com/api/players/<id>/heroes"
+  },
+  {
+    "table_name": "heroes_matchups",
+    "url": "https://api.opendota.com/api/heroes/<id>/matchups"
+  }
+]
