@@ -16,6 +16,10 @@
     "url": "https://api.opendota.com/api/heroes"
   },
   {
+    "table_name": "hero_stats",
+    "url": "https://api.opendota.com/api/heroStats"
+  },
+  {
     "table_name": "pro_matches",
     "url": "https://api.opendota.com/api/proMatches"
   },
