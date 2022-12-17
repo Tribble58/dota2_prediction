@@ -1,0 +1,101 @@
+[
+  {
+    "fields": {
+      "id": "hero_id",
+      "primary_attr": "primary_attr",
+      "localized_name": "localized_name"
+    },
+    "table_name_dwh": "heroes_dict",
+    "table_name_source": "heroes"
+  },
+  {
+    "fields": {
+      "name": "name",
+      "tier": "tier",
+      "leagueid": "league_id"
+    },
+    "table_name_dwh": "leagues_dict",
+    "table_name_source": "leagues"
+  },
+  {
+    "fields": {
+      "pro_ban": "pro_ban",
+      "pro_win": "pro_win",
+      "pro_pick": "pro_pick"
+    },
+    "table_name_dwh": "heroes_dict",
+    "table_name_source": "hero_stats"
+  },
+  {
+    "fields": {
+      "name": "name",
+      "wins": "wins",
+      "losses": "losses",
+      "rating": "rating",
+      "team_id": "team_id"
+    },
+    "table_name_dwh": "teams_dict",
+    "table_name_source": "teams"
+  },
+  {
+    "fields": {
+      "name": "name",
+      "team_id": "team_id",
+      "account_id": "account_id",
+      "personaname": "nick",
+      "fh_unavailable": "fh_unavailable",
+      "full_history_time": "full_history_time"
+    },
+    "table_name_dwh": "pro_players_dict",
+    "table_name_source": "pro_players"
+  },
+  {
+    "fields": {
+      "wins": "wins",
+      "hero_id": "hero_id",
+      "games_played": "games_played"
+    },
+    "table_name_dwh": "heroes_matchups_dim",
+    "table_name_source": "heroes_matchups"
+  },
+  {
+    "fields": {
+      "<id>": "account_id",
+      "wins": "wins",
+      "games": "games",
+      "hero_id": "hero_id"
+    },
+    "table_name_dwh": "pro_players_heroes_dim",
+    "table_name_source": "pro_players_heroes"
+  },
+  {
+    "fields": {
+      "patch": "patch",
+      "region": "region",
+      "leagueid": "league_id",
+      "match_id": "match_id",
+      "picks_bans": "picks_bans",
+      "radiant_xp_adv": "radiant_xp_adv",
+      "first_blood_time": "first_blood_time",
+      "radiant_gold_adv": "radiant_gold_adv"
+    },
+    "table_name_dwh": "matches_dim",
+    "table_name_source": "matches"
+  },
+  {
+    "fields": {
+      "duration": "duration",
+      "leagueid": "league_id",
+      "match_id": "match_id",
+      "dire_score": "dire_score",
+      "start_time": "start_time",
+      "radiant_win": "radiant_win",
+      "series_type": "series_type",
+      "dire_team_id": "dire_team_id",
+      "radiant_score": "radiant_score",
+      "radiant_team_id": "radiant_team_id"
+    },
+    "table_name_dwh": "pro_matches_fact",
+    "table_name_source": "pro_matches"
+  }
+]
