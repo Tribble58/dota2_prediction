@@ -3,7 +3,6 @@ create or replace function data.create_package(etl_json jsonb) returns jsonb
 as
 $$
 declare
-    etl_json               jsonb;
     stage             text;
     data              jsonb;
     logs              jsonb;
@@ -16,10 +15,10 @@ declare
     job_id            bigint;
     lower_boundary    numeric;
     upper_boundary    numeric;
-    etl_json_item          jsonb;
+    etl_json_item     jsonb;
     start_time_item   text;
     package_uid       uuid;
-    etl_json_output        jsonb;
+    etl_json_output   jsonb;
 begin
     stage := etl_json #>> '{stage}';
     data := etl_json #>> '{data}';
@@ -37,6 +36,7 @@ begin
     then
         packages_number := packages_number + 1;
     end if;
+
 
     -- Get the id of job that was created during ETL session for this particular data
 
@@ -72,12 +72,7 @@ begin
                 );
 
             etl_json_output := etl_json_output || etl_json_item;
-            raise notice '%', etl_json_output;
-
         end loop;
-
-    -- Delete data that is 60 days older than current transaction
-
     delete
     from service.packages
     where id in (
@@ -86,12 +81,12 @@ begin
         where load_date < current_date - 60
     );
 
+    -- Delete data that is 60 days older than current transaction
+
     return etl_json_output;
 
 end;
 $$;
-
-
 
 -- do
 -- $$
@@ -114,71 +109,7 @@ $$;
 --         package_uid       uuid;
 --         etl_output        jsonb;
 --     begin
---         etl := '{
---           "stage": "extract",
---           "start_time": "2022-10-31 19:36:23",
---           "end_time": "2022-10-31 19:36:24",
---           "data": [
---             {
---               "team_id": 8291895,
---               "rating": 1624.51,
---               "wins": 169,
---               "losses": 98,
---               "last_match_time": 1667130565,
---               "name": "Tundra Esports",
---               "tag": "Tundra",
---               "logo_url": "https://steamusercontent-a.akamaihd.net/ugc/1771573722041415896/D98163DE6281550D35494CEFDF6257F9716BD43B/"
---             },
---             {
---               "team_id": 2163,
---               "rating": 1532.73,
---               "wins": 1155,
---               "losses": 794,
---               "last_match_time": 1667110843,
---               "name": "Team Liquid",
---               "tag": "Liquid",
---               "logo_url": "https://steamcdn-a.akamaihd.net/apps/dota2/images/team_logos/2163.png"
---             },
---             {
---               "team_id": 1838315,
---               "rating": 1530.73,
---               "wins": 1033,
---               "losses": 521,
---               "last_match_time": 1667130565,
---               "name": "Team Secret",
---               "tag": "Secret",
---               "logo_url": "https://steamcdn-a.akamaihd.net/apps/dota2/images/team_logos/1838315.png"
---             },
---             {
---               "team_id": 7412785,
---               "rating": 1520.12,
---               "wins": 267,
---               "losses": 1,
---               "last_match_time": 1639928575,
---               "name": "CyberBonch-1",
---               "tag": "CB",
---               "logo_url": "https://steamusercontent-a.akamaihd.net/ugc/1842537871043985153/774A1838BEB3E73BFDEFEC0EDFD97B4F5C62B838/"
---             },
---             {
---               "team_id": 15,
---               "rating": 1513.85,
---               "wins": 1569,
---               "losses": 948,
---               "last_match_time": 1666516003,
---               "name": "PSG.LGD",
---               "tag": "PSG.LGD",
---               "logo_url": "https://steamcdn-a.akamaihd.net/apps/dota2/images/team_logos/15.png"
---             }
---           ],
---           "logs": {
---             "Try: 0": "Data was extracted successfully"
---           },
---           "meta": {
---             "table_name": "teams",
---             "data_package_size": 2,
---             "job_uid": "02420adc-0dcb-4e31-8ba1-4dc595195fae"
---           }
---         }'::jsonb;
+--         select test_column::jsonb into etl from test.test where id = 3;
 --         stage := etl #>> '{stage}';
 --         data := etl #>> '{data}';
 --         logs := etl #>> '{logs}';
