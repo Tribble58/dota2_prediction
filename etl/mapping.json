@@ -12,7 +12,8 @@
     "fields": {
       "name": "name",
       "tier": "tier",
-      "leagueid": "league_id"
+      "leagueid": "league_id",
+      "unique_field": "league_id"
     },
     "table_name_dwh": "leagues_dict",
     "table_name_source": "leagues"
@@ -21,7 +22,8 @@
     "fields": {
       "pro_ban": "pro_ban",
       "pro_win": "pro_win",
-      "pro_pick": "pro_pick"
+      "pro_pick": "pro_pick",
+      "unique_field": "hero_id"
     },
     "table_name_dwh": "heroes_dict",
     "table_name_source": "hero_stats"
@@ -29,31 +31,33 @@
   {
     "fields": {
       "name": "name",
-      "wins": "wins",
-      "losses": "losses",
-      "rating": "rating",
-      "team_id": "team_id"
-    },
-    "table_name_dwh": "teams_dict",
-    "table_name_source": "teams"
-  },
-  {
-    "fields": {
-      "name": "name",
       "team_id": "team_id",
       "account_id": "account_id",
-      "personaname": "nick",
+      "personname": "nick",
       "fh_unavailable": "fh_unavailable",
-      "full_history_time": "full_history_time"
+      "full_story_time": "full_story_time"
     },
     "table_name_dwh": "pro_players_dict",
     "table_name_source": "pro_players"
   },
   {
     "fields": {
+      "name": "name",
+      "wins": "wins",
+      "losses": "losses",
+      "rating": "rating",
+      "team_id": "team_id",
+      "unique_field": "team_id"
+    },
+    "table_name_dwh": "teams_dict",
+    "table_name_source": "teams"
+  },
+  {
+    "fields": {
       "wins": "wins",
       "hero_id": "hero_id",
-      "games_played": "games_played"
+      "games_played": "games_played",
+      "unique_field": "hero_id"
     },
     "table_name_dwh": "heroes_matchups_dim",
     "table_name_source": "heroes_matchups"
@@ -63,7 +67,8 @@
       "<id>": "account_id",
       "wins": "wins",
       "games": "games",
-      "hero_id": "hero_id"
+      "hero_id": "hero_id",
+      "unique_field": "account_id"
     },
     "table_name_dwh": "pro_players_heroes_dim",
     "table_name_source": "pro_players_heroes"
@@ -75,6 +80,7 @@
       "leagueid": "league_id",
       "match_id": "match_id",
       "picks_bans": "picks_bans",
+      "unique_field": "match_id",
       "radiant_xp_adv": "radiant_xp_adv",
       "first_blood_time": "first_blood_time",
       "radiant_gold_adv": "radiant_gold_adv"
@@ -92,6 +98,7 @@
       "radiant_win": "radiant_win",
       "series_type": "series_type",
       "dire_team_id": "dire_team_id",
+      "unique_field": "match_id",
       "radiant_score": "radiant_score",
       "radiant_team_id": "radiant_team_id"
     },
