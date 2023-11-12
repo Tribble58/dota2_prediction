@@ -8,8 +8,8 @@ This project is aimed to create a unified system that contains Dota 2 data. Basi
 
 Data is collected using Dota 2 official API (https://docs.opendota.com). \
 During data modeling, the graphical data diagram was drawn:
-
-<img src="other\data_model.png"/>
+airflow
+<img src="other\data_model.png" width="500" height="1350"/>
 
 The main integration tool is **Apache Airflow**, RDBMS is **PostgreSQL**. \
 **PostgreSQL** is used both as intermediate storage for data that flows between DAGS and as the main storage for final data.
