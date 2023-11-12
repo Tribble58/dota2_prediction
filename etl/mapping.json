@@ -5,40 +5,46 @@
       "primary_attr": "primary_attr",
       "localized_name": "localized_name"
     },
+    "unique_field": "hero_id",
     "table_name_dwh": "heroes_dict",
+    "transformations": {
+      "id": null,
+      "primary_attr": null,
+      "localized_name": null
+    },
     "table_name_source": "heroes"
   },
   {
     "fields": {
       "name": "name",
       "tier": "tier",
-      "leagueid": "league_id",
-      "unique_field": "league_id"
+      "leagueid": "league_id"
     },
+    "unique_field": "league_id",
     "table_name_dwh": "leagues_dict",
+    "transformations": {
+      "name": null,
+      "tier": null,
+      "leagueid": null
+    },
     "table_name_source": "leagues"
   },
   {
     "fields": {
+      "id": "hero_id",
       "pro_ban": "pro_ban",
       "pro_win": "pro_win",
-      "pro_pick": "pro_pick",
-      "unique_field": "hero_id"
+      "pro_pick": "pro_pick"
     },
+    "unique_field": "hero_id",
     "table_name_dwh": "heroes_dict",
-    "table_name_source": "hero_stats"
-  },
-  {
-    "fields": {
-      "name": "name",
-      "team_id": "team_id",
-      "account_id": "account_id",
-      "personname": "nick",
-      "fh_unavailable": "fh_unavailable",
-      "full_story_time": "full_story_time"
+    "transformations": {
+      "id": null,
+      "pro_ban": null,
+      "pro_win": null,
+      "pro_pick": null
     },
-    "table_name_dwh": "pro_players_dict",
-    "table_name_source": "pro_players"
+    "table_name_source": "hero_stats"
   },
   {
     "fields": {
@@ -46,20 +52,53 @@
       "wins": "wins",
       "losses": "losses",
       "rating": "rating",
-      "team_id": "team_id",
-      "unique_field": "team_id"
+      "team_id": "team_id"
     },
+    "unique_field": "team_id",
     "table_name_dwh": "teams_dict",
+    "transformations": {
+      "name": null,
+      "wins": null,
+      "losses": null,
+      "rating": null,
+      "team_id": null
+    },
     "table_name_source": "teams"
+  },
+  {
+    "fields": {
+      "name": "name",
+      "team_id": "team_id",
+      "account_id": "account_id",
+      "personaname": "nick",
+      "fh_unavailable": "fh_unavailable",
+      "full_history_time": "full_history_time"
+    },
+    "unique_field": "account_id",
+    "table_name_dwh": "pro_players_dict",
+    "transformations": {
+      "name": null,
+      "team_id": null,
+      "account_id": null,
+      "personaname": null,
+      "fh_unavailable": null,
+      "full_history_time": null
+    },
+    "table_name_source": "pro_players"
   },
   {
     "fields": {
       "wins": "wins",
       "hero_id": "hero_id",
-      "games_played": "games_played",
-      "unique_field": "hero_id"
+      "games_played": "games_played"
     },
+    "unique_field": "hero_id",
     "table_name_dwh": "heroes_matchups_dim",
+    "transformations": {
+      "wins": null,
+      "hero_id": null,
+      "games_played": null
+    },
     "table_name_source": "heroes_matchups"
   },
   {
@@ -67,10 +106,16 @@
       "<id>": "account_id",
       "wins": "wins",
       "games": "games",
-      "hero_id": "hero_id",
-      "unique_field": "account_id"
+      "hero_id": "hero_id"
     },
+    "unique_field": "account_id",
     "table_name_dwh": "pro_players_heroes_dim",
+    "transformations": {
+      "<id>": null,
+      "wins": null,
+      "games": null,
+      "hero_id": null
+    },
     "table_name_source": "pro_players_heroes"
   },
   {
@@ -80,12 +125,22 @@
       "leagueid": "league_id",
       "match_id": "match_id",
       "picks_bans": "picks_bans",
-      "unique_field": "match_id",
       "radiant_xp_adv": "radiant_xp_adv",
       "first_blood_time": "first_blood_time",
       "radiant_gold_adv": "radiant_gold_adv"
     },
+    "unique_field": "match_id",
     "table_name_dwh": "matches_dim",
+    "transformations": {
+      "patch": null,
+      "region": null,
+      "leagueid": null,
+      "match_id": null,
+      "picks_bans": null,
+      "radiant_xp_adv": null,
+      "first_blood_time": null,
+      "radiant_gold_adv": null
+    },
     "table_name_source": "matches"
   },
   {
@@ -98,11 +153,23 @@
       "radiant_win": "radiant_win",
       "series_type": "series_type",
       "dire_team_id": "dire_team_id",
-      "unique_field": "match_id",
       "radiant_score": "radiant_score",
       "radiant_team_id": "radiant_team_id"
     },
+    "unique_field": "match_id",
     "table_name_dwh": "pro_matches_fact",
+    "transformations": {
+      "duration": null,
+      "leagueid": null,
+      "match_id": null,
+      "dire_score": null,
+      "start_time": "datetime.fromtimestamp(<value>).strftime(\"%Y-%m-%d %H:%M:%S\")",
+      "radiant_win": null,
+      "series_type": null,
+      "dire_team_id": null,
+      "radiant_score": null,
+      "radiant_team_id": null
+    },
     "table_name_source": "pro_matches"
   }
 ]
