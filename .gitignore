@@ -1,2 +1,6 @@
 #/other/
 /.idea/
+/other/mapping.csv
+/other/mapping.xlsx
+/other/TODO
+/etl/variables.json
