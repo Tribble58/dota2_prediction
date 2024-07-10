@@ -10,6 +10,10 @@ from airflow.operators.python import PythonOperator
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import Variable
 
+from urllib.parse import quote_plus, quote
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 default_args = {
     "owner": "Vladlen",
     "retries": 50,
@@ -63,14 +67,16 @@ def query_insert_package(etl_json_item, data):
     :param etl_json_item: header of result JSON
     :param data: data that was extracted from the source
     """
-    etl_json_item['data'] = data
+    if len(data) >= 0:
+        etl_json_item['data'] = data
 
-    etl_json_item = json.dumps(etl_json_item)
-    etl_json_item = str(etl_json_item).replace("'", "''")
-    query = f"select service.create_package('{etl_json_item}');"
-    execute_query(query)
-    print("Package has been created successfully!")
-
+        etl_json_item = json.dumps(etl_json_item)
+        etl_json_item = str(etl_json_item).replace("'", "''")
+        query = f"select service.create_package('{etl_json_item}');"
+        execute_query(query)
+        print("Package has been created successfully!")
+    else:
+        return "Data is empty!"
 
 def request_data(url):
     """
@@ -138,7 +144,10 @@ def extract_data(ti):
 
             ids_data = request_data(ids_url)
             data = []
+            count = 1
             for id_data in ids_data:
+                print(f'Processing {count} of total {len(ids_data)}')
+
                 if table_name == 'matches':
                     item_id = id_data['match_id']
                     data.append(request_data(url.replace('<id>', str(item_id))))
@@ -160,6 +169,7 @@ def extract_data(ti):
                                 # list(map(lambda x: x.update({'hero_against_id': item_id}), result))
                     data.extend(result)
                     time.sleep(1)
+                count += 1
             # Insert package to service.packages
             query_insert_package(etl_json, data)
         else:
@@ -178,6 +188,20 @@ def extract_data(ti):
                     else:
                         print('Final page is reached!')
                         page = None
+            elif table_name == 'pro_matches':
+                sql_url = 'https://api.opendota.com/api/explorer?sql='
+                start_time = datetime.now() - relativedelta(years=2)
+                while start_time <= datetime.now():
+                    end_time = start_time + relativedelta(days=10)
+                    url_query = 'select match_id, duration, start_time, radiant_team_id, dire_team_id, ' + \
+                    'leagueid, series_type, radiant_score, dire_score, radiant_win, first_blood_time ' + \
+                    'from matches where leagueid is not null ' + \
+                    f'and to_timestamp(start_time) between \'{start_time}\' and \'{end_time}\''
+                    # sql parameter takes SQL encoded string as an input
+                    url_encoded = url_query.replace(' ', '%20')
+                    start_time = end_time
+                    matches_data = request_data(sql_url + url_encoded)['rows']
+                    query_insert_package(etl_json, matches_data)
             else:
                 data = request_data(url)
                 query_insert_package(etl_json, data)
@@ -186,7 +210,6 @@ def extract_data(ti):
 
 
 def insert_data(ti):
-    # TODO: replace with autogeneration based on mapping table
     # Get job uid
     job_uid = ti.xcom_pull(task_ids='initialize_job', key='job_uid')
     priority = read_file('priority_path')
