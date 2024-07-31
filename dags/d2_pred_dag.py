@@ -130,12 +130,10 @@ def extract_data(ti):
             }
         }
 
-        if table_name in ('matches', 'pro_players_heroes', 'heroes_matchups'):
+        if table_name in ('pro_players_heroes', 'heroes_matchups'):
             # If the table name matches the one in the list below, then it contains a parameter in query string,
             # thus we need to extract the arguments for these parameters first
-            if table_name == 'matches':
-                ids_url = 'https://api.opendota.com/api/proMatches'
-            elif table_name == 'pro_players_heroes':
+            if table_name == 'pro_players_heroes':
                 ids_url = 'https://api.opendota.com/api/proPlayers'
             else:
                 ids_url = 'https://api.opendota.com/api/heroes'
@@ -147,28 +145,23 @@ def extract_data(ti):
             count = 1
             for id_data in ids_data:
                 print(f'Processing {count} of total {len(ids_data)}')
-
-                if table_name == 'matches':
-                    item_id = id_data['match_id']
-                    data.append(request_data(url.replace('<id>', str(item_id))))
+                if table_name == 'pro_players_heroes':
+                    item_id = id_data['account_id']
+                    temp_data = request_data(url.replace('<id>', str(item_id)))
+                    result = []
+                    for temp_item in temp_data:
+                        temp_dict = deepcopy(temp_item)
+                        temp_dict['account_id'] = item_id
+                        result.append(temp_dict)
                 else:
-                    if table_name == 'pro_players_heroes':
-                        item_id = id_data['account_id']
-                        temp_data = request_data(url.replace('<id>', str(item_id)))
-                        result = []
-                        for temp_item in temp_data:
-                            temp_dict = deepcopy(temp_item)
-                            temp_dict['account_id'] = item_id
-                            result.append(temp_dict)
-                    else:
-                        item_id = id_data['id']
-                        result = request_data(url.replace('<id>', str(item_id)))
-                        if table_name == 'heroes_matchups':
-                            for hero_matchup in result:
-                                hero_matchup['hero_against_id'] = item_id
-                                # list(map(lambda x: x.update({'hero_against_id': item_id}), result))
-                    data.extend(result)
-                    time.sleep(1)
+                    item_id = id_data['id']
+                    result = request_data(url.replace('<id>', str(item_id)))
+                    if table_name == 'heroes_matchups':
+                        for hero_matchup in result:
+                            hero_matchup['hero_against_id'] = item_id
+                            # list(map(lambda x: x.update({'hero_against_id': item_id}), result))
+                data.extend(result)
+                time.sleep(1)
                 count += 1
             # Insert package to service.packages
             query_insert_package(etl_json, data)
