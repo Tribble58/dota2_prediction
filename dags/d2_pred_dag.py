@@ -181,15 +181,19 @@ def extract_data(ti):
                     else:
                         print('Final page is reached!')
                         page = None
-            elif table_name == 'pro_matches':
+            elif table_name in ('pro_matches', 'picks_bans'):
                 sql_url = 'https://api.opendota.com/api/explorer?sql='
                 start_time = datetime.now() - relativedelta(years=2)
                 while start_time <= datetime.now():
                     end_time = start_time + relativedelta(days=10)
-                    url_query = 'select match_id, duration, start_time, radiant_team_id, dire_team_id, ' + \
-                    'leagueid, series_type, radiant_score, dire_score, radiant_win, first_blood_time ' + \
-                    'from matches where leagueid is not null ' + \
-                    f'and to_timestamp(start_time) between \'{start_time}\' and \'{end_time}\''
+                    if table_name == 'pro_matches':
+                        url_query = 'select match_id, duration, start_time, radiant_team_id, dire_team_id, ' + \
+                        'leagueid, series_type, radiant_score, dire_score, radiant_win, first_blood_time ' + \
+                        'from matches where leagueid is not null ' + \
+                        f'and to_timestamp(start_time) between \'{start_time}\' and \'{end_time}\''
+                    else:
+                        url_query = 'select pb.* from picks_bans pb join matches m on pb.match_id = m.match_id ' + \
+                                     f'where to_timestamp(m.start_time) between \'{start_time}\' and \'{end_time}\''
                     # sql parameter takes SQL encoded string as an input
                     url_encoded = url_query.replace(' ', '%20')
                     start_time = end_time
