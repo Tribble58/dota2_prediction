@@ -1,38 +1,47 @@
 [
   {
-    "table_name": "teams",
-    "url": "https://api.opendota.com/api/teams"
-  },
-  {
-    "table_name": "pro_players",
-    "url": "https://api.opendota.com/api/proPlayers"
-  },
-  {
-    "table_name": "leagues",
-    "url": "https://api.opendota.com/api/leagues"
-  },
-  {
     "table_name": "heroes",
-    "url": "https://api.opendota.com/api/heroes"
+    "url": "https://api.opendota.com/api/heroes",
+    "to_load": true
   },
   {
     "table_name": "hero_stats",
-    "url": "https://api.opendota.com/api/heroStats"
+    "url": "https://api.opendota.com/api/heroStats",
+    "to_load": false
   },
   {
-    "table_name": "pro_matches",
-    "url": "https://api.opendota.com/api/proMatches"
+    "table_name": "teams",
+    "url": "https://api.opendota.com/api/teams",
+    "to_load": false
   },
   {
-    "table_name": "matches",
-    "url": "https://api.opendota.com/api/matches/<id>"
+    "table_name": "pro_players",
+    "url": "https://api.opendota.com/api/proPlayers",
+    "to_load": false
+  },
+  {
+    "table_name": "leagues",
+    "url": "https://api.opendota.com/api/leagues",
+    "to_load": false
   },
   {
     "table_name": "pro_players_heroes",
-    "url": "https://api.opendota.com/api/players/<id>/heroes"
+    "url": "https://api.opendota.com/api/players/<id>/heroes",
+    "to_load": false
+  },
+  {
+    "table_name": "pro_matches",
+    "url": "https://api.opendota.com/api/proMatches",
+    "to_load": false
   },
   {
     "table_name": "heroes_matchups",
-    "url": "https://api.opendota.com/api/heroes/<id>/matchups"
+    "url": "https://api.opendota.com/api/heroes/<id>/matchups",
+    "to_load": false
+  },
+  {
+    "table_name": "picks_bans",
+    "url": "",
+    "to_load": false
   }
 ]
