@@ -10005,10 +10005,6 @@
   "meta": {
     "table_name": "teams",
     "package_uid": "32777daf-a817-449f-8523-3dd4b3c68cfc",
-    "package_number": 0,
-    "packages_total": 1
-  },
-  "stage": "package",
-  "end_time": "2022-11-02 16:00:34",
-  "start_time": "2022-11-02 16:00:34"
+    "package_size": 100
+  }
 }

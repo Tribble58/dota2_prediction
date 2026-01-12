@@ -1,17 +1,17 @@
 import json
 import requests
 import time
+import logging
 
 from copy import deepcopy
 
 from airflow import DAG
 from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
-from airflow.hooks.postgres_hook import PostgresHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.models import Variable
 
 from urllib.parse import quote_plus, quote
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 default_args = {
@@ -22,26 +22,51 @@ default_args = {
 
 
 def read_file(variable):
-    path = Variable.get(variable)
-    with open(path, 'r') as f:
-        file = json.load(f)
-    return file
+    """
+    Read a JSON file path from Airflow Variable and load its contents.
+    
+    :param variable: Airflow Variable name containing the file path
+    :return: Parsed JSON content
+    """
+    try:
+        path = Variable.get(variable)
+        with open(path, 'r', encoding='utf-8') as f:
+            file = json.load(f)
+        return file
+    except Exception as e:
+        logging.error(f"Error reading file from variable '{variable}': {e}")
+        raise
 
 
 def execute_query(query, fetch=True):
+    """
+    Execute a SQL query against the DWH PostgreSQL database.
+    
+    :param query: SQL query string to execute
+    :param fetch: Whether to fetch results (True) or just execute (False)
+    :return: Query results if fetch=True, None otherwise
+    """
     pg_hook = PostgresHook(
         postgres_conn_id='d2_dwh'
     )
     pg_conn = pg_hook.get_conn()
     cursor = pg_conn.cursor()
-    cursor.execute(query)
-    if fetch:
-        returned_value = cursor.fetchall()
-        pg_conn.commit()
-    else:
-        pg_conn.commit()
-        return
-    return returned_value
+    try:
+        cursor.execute(query)
+        if fetch:
+            returned_value = cursor.fetchall()
+            pg_conn.commit()
+            return returned_value
+        else:
+            pg_conn.commit()
+            return None
+    except Exception as e:
+        pg_conn.rollback()
+        logging.error(f"Error executing query: {query[:100]}... Error: {str(e)}")
+        raise
+    finally:
+        cursor.close()
+        pg_conn.close()
 
 
 def initialize_job(ti):
@@ -52,13 +77,18 @@ def initialize_job(ti):
     """
     try:
         job_code = 'dota2_etl'
-        print("Creating a new job...")
-        query = f"select service.create_job('{job_code}');"
-        job_uid = execute_query(query)[0][0]
-        print("Job has been created successfully!")
-        ti.xcom_push(key='job_uid', value=job_uid)
-    except BaseException as e:
-        print(f"ERROR: {e}")
+        logging.info("Creating a new job...")
+        query = f"SELECT service.create_job('{job_code}');"
+        result = execute_query(query)
+        if result and len(result) > 0 and result[0][0]:
+            job_uid = result[0][0]
+            logging.info(f"Job has been created successfully! Job UID: {job_uid}")
+            ti.xcom_push(key='job_uid', value=job_uid)
+        else:
+            raise ValueError("Failed to create job - no UID returned")
+    except Exception as e:
+        logging.error(f"ERROR creating job: {e}")
+        raise
 
 
 def query_insert_package(etl_json_item, data):
@@ -69,34 +99,52 @@ def query_insert_package(etl_json_item, data):
     """
     if len(data) >= 0:
         etl_json_item['data'] = data
-
-        etl_json_item = json.dumps(etl_json_item)
-        etl_json_item = str(etl_json_item).replace("'", "''")
-        query = f"select service.create_package('{etl_json_item}');"
-        execute_query(query)
-        print("Package has been created successfully!")
+        
+        # Convert to JSON string and properly escape for PostgreSQL
+        etl_json_str = json.dumps(etl_json_item)
+        # Escape single quotes for SQL (PostgreSQL jsonb type handles this, but we need to escape for string literal)
+        etl_json_str_escaped = etl_json_str.replace("'", "''")
+        
+        # Use jsonb type casting in PostgreSQL
+        query = f"SELECT service.create_package('{etl_json_str_escaped}'::jsonb);"
+        execute_query(query, fetch=False)
+        logging.info("Package has been created successfully!")
     else:
+        logging.warning("Data is empty, skipping package creation")
         return "Data is empty!"
 
-def request_data(url):
+def request_data(url, max_retries=10, retry_delay=5):
     """
-    Requests data based on the provided URL. If response is not successful, try again after a delay. Raise an exception
-    if number of tries exceeds count limit
+    Requests data based on the provided URL. If response is not successful, try again after a delay. 
+    Raise an exception if number of tries exceeds count limit.
+    
     :param url: Query string of request
+    :param max_retries: Maximum number of retry attempts
+    :param retry_delay: Delay in seconds between retries
     :return: JSON of the response
     """
-    print("Requesting data...")
+    logging.info(f"Requesting data from: {url}")
     count = 0
-    while count < 10:
-        response = requests.request("GET", url)
-        if response.status_code != 200:
-            print(f"ERROR! Response code is {response.status_code}, response message: {response.text}")
+    while count < max_retries:
+        try:
+            response = requests.get(url, timeout=30)
+            if response.status_code == 200:
+                logging.info("Data has been retrieved successfully!")
+                return response.json()
+            else:
+                logging.warning(f"Response code is {response.status_code}, response message: {response.text[:200]}")
+                count += 1
+                if count < max_retries:
+                    time.sleep(retry_delay)
+                    continue
+        except requests.exceptions.RequestException as e:
+            logging.warning(f"Request exception: {str(e)}")
             count += 1
-            time.sleep(5)
-            continue
-        print("Data has been retrieved successfully!")
-        return json.loads(response.content)
-    raise ValueError("ERROR requesting data")
+            if count < max_retries:
+                time.sleep(retry_delay)
+                continue
+    
+    raise ValueError(f"ERROR requesting data after {max_retries} attempts from URL: {url}")
 
 
 def extract_data(ti):
@@ -108,18 +156,22 @@ def extract_data(ti):
     priority = read_file('priority_path')
     job_uid = ti.xcom_pull(task_ids='initialize_job', key='job_uid')
 
-    # Size of package that data shpuld be split on
-    package_size = int(Variable.get('package_size'))
-    print(f"Package size: {package_size}")
+    # Size of package that data should be split on
+    try:
+        package_size = int(Variable.get('package_size'))
+    except Exception:
+        package_size = 1000  # Default value if variable not set
+        logging.warning(f"Variable 'package_size' not set, using default: {package_size}")
+    logging.info(f"Package size: {package_size}")
 
     # Iterate over priority file and extract each entity
     for temp_item in priority:
         if temp_item['to_load']:
             url = temp_item['url']
             table_name = temp_item['table_name']
-            print("-" * 50)
-            print(f'Table name: {table_name}')
-            print("-" * 50)
+            logging.info("-" * 50)
+            logging.info(f'Table name: {table_name}')
+            logging.info("-" * 50)
 
             etl_json = {
                 "data": None,
@@ -139,13 +191,13 @@ def extract_data(ti):
                 else:
                     ids_url = 'https://api.opendota.com/api/heroes'
 
-                print(f"Getting ids for extracting {table_name}")
+                logging.info(f"Getting ids for extracting {table_name}")
 
                 ids_data = request_data(ids_url)
                 data = []
                 count = 1
                 for id_data in ids_data:
-                    print(f'Processing {count} of total {len(ids_data)}')
+                    logging.info(f'Processing {count} of total {len(ids_data)}')
                     if table_name == 'pro_players_heroes':
                         item_id = id_data['account_id']
                         temp_data = request_data(url.replace('<id>', str(item_id)))
@@ -171,7 +223,7 @@ def extract_data(ti):
                     # Request that has a pagination
                     page = 0
                     while page is not None:
-                        print(f'Page number is {page}')
+                        logging.info(f'Page number is {page}')
                         etl_json_page = deepcopy(etl_json)
                         page_url = f'{url}?page={page}'
                         page_data = request_data(page_url)
@@ -180,7 +232,7 @@ def extract_data(ti):
                             query_insert_package(etl_json_page, page_data)
                             page += 1
                         else:
-                            print('Final page is reached!')
+                            logging.info('Final page is reached!')
                             page = None
                 elif table_name in ('pro_matches', 'picks_bans'):
                     sql_url = 'https://api.opendota.com/api/explorer?sql='
@@ -196,7 +248,8 @@ def extract_data(ti):
                             url_query = 'select pb.* from picks_bans pb join matches m on pb.match_id = m.match_id ' + \
                                          f'where to_timestamp(m.start_time) between \'{start_time}\' and \'{end_time}\''
                         # sql parameter takes SQL encoded string as an input
-                        url_encoded = url_query.replace(' ', '%20')
+                        # Properly encode the SQL query for URL
+                        url_encoded = quote_plus(url_query)
                         start_time = end_time
                         matches_data = request_data(sql_url + url_encoded)['rows']
                         query_insert_package(etl_json, matches_data)
@@ -204,7 +257,7 @@ def extract_data(ti):
                     data = request_data(url)
                     query_insert_package(etl_json, data)
 
-            print(f"Successfully processed {table_name}")
+            logging.info(f"Successfully processed {table_name}")
 
 
 def insert_data(ti):
@@ -216,38 +269,44 @@ def insert_data(ti):
         if priority_item['to_load']:
             table_name = priority_item['table_name']
 
-            print("-" * 50)
-            print(f'Table name: {table_name}')
-            print("-" * 50)
+            logging.info("-" * 50)
+            logging.info(f'Table name: {table_name}')
+            logging.info("-" * 50)
 
             # Get all packages' uids that correspond to this job and table name
-            query = f"select jsonb_agg(p.uid) from service.packages p " \
-                    f"left join service.jobs j on p.job_id = j.id " \
-                    f"where j.uid = '{job_uid}' and p.table_name = '{table_name}';"
+            query = f"SELECT jsonb_agg(p.uid) FROM service.packages p " \
+                    f"LEFT JOIN service.jobs j ON p.job_id = j.id " \
+                    f"WHERE j.uid = '{job_uid}' AND p.table_name = '{table_name}';"
 
-            package_uids = execute_query(query)[0][0]
-            print(f'Package uids: {package_uids}')
+            result = execute_query(query)
+            if not result or not result[0] or not result[0][0]:
+                logging.warning(f"No packages found for table {table_name} and job {job_uid}")
+                continue
+                
+            package_uids = result[0][0]
+            logging.info(f'Found {len(package_uids)} packages for table {table_name}')
 
             # Iterate over all package uids and insert them
             count = 1
             for package_uid in package_uids:
-                print("-" * 50)
-                print(f'Processing {count} of total {len(package_uids)}')
-                print("-" * 50)
-                query = f"call service.insert_data('{table_name}', '{package_uid}');"
-                print(f'Query: {query}')
-                execute_query(query, False)
-
+                logging.info("-" * 50)
+                logging.info(f'Processing package {count} of total {len(package_uids)}')
+                logging.info("-" * 50)
+                query = f"CALL service.insert_data('{table_name}', '{package_uid}');"
+                logging.debug(f'Executing query for package {package_uid}')
+                execute_query(query, fetch=False)
                 count += 1
 
-            print('Data was inserted successfully!')
+            logging.info(f'Data was inserted successfully for table {table_name}!')
 
 
 with DAG(
         dag_id='D2_ETL',
         default_args=default_args,
-        start_date=datetime.now(),
-        schedule_interval='@daily'
+        start_date=datetime(2024, 1, 1),  # Fixed start date instead of now() for better DAG behavior
+        schedule_interval='@daily',
+        catchup=False,  # Don't run backfill automatically
+        tags=['dota2', 'etl', 'data-warehouse']
 ) as dag:
     initialize_job = PythonOperator(
         task_id='initialize_job',

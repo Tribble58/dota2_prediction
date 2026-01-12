@@ -68,7 +68,10 @@
   {
     "fields": {
       "name": "name",
-      "team_id": "team_id",
+      "team_id": {
+        "field_name": "team_id",
+        "table_name": "teams_dict"
+      },
       "account_id": "account_id",
       "personaname": "nick",
       "fh_unavailable": "fh_unavailable",
@@ -89,7 +92,10 @@
   {
     "fields": {
       "wins": "wins",
-      "hero_id": "hero_id",
+      "hero_id": {
+        "field_name": "hero_id",
+        "table_name": "heroes_dict"
+      },
       "games_played": "games_played"
     },
     "unique_field": "hero_id",
@@ -103,16 +109,22 @@
   },
   {
     "fields": {
-      "<id>": "account_id",
-      "wins": "wins",
+      "account_id": {
+        "field_name": "account_id",
+        "table_name": "pro_players_dict"
+      },
+      "win": "win",
       "games": "games",
-      "hero_id": "hero_id"
+      "hero_id": {
+        "field_name": "hero_id",
+        "table_name": "heroes_dict"
+      }
     },
     "unique_field": "account_id",
     "table_name_dwh": "pro_players_heroes_dim",
     "transformations": {
-      "<id>": null,
-      "wins": null,
+      "account_id": null,
+      "win": null,
       "games": null,
       "hero_id": null
     },
@@ -122,7 +134,10 @@
     "fields": {
       "patch": "patch",
       "region": "region",
-      "leagueid": "league_id",
+      "leagueid": {
+        "field_name": "league_id",
+        "table_name": "leagues_dict"
+      },
       "match_id": "match_id",
       "picks_bans": "picks_bans",
       "radiant_xp_adv": "radiant_xp_adv",
@@ -146,15 +161,28 @@
   {
     "fields": {
       "duration": "duration",
-      "leagueid": "league_id",
-      "match_id": "match_id",
+      "leagueid": {
+        "destination_table_field": "league_id",
+        "link_field_name": "league_id",
+        "table_name": "leagues_dict"
+      },
+      "match_id": {
+        "field_name": "match_id",
+        "table_name": "matches_dim"
+      },
       "dire_score": "dire_score",
       "start_time": "start_time",
       "radiant_win": "radiant_win",
       "series_type": "series_type",
-      "dire_team_id": "dire_team_id",
+      "dire_team_id": {
+        "field_name": "team_id",
+        "table_name": "teams_dict"
+      },
       "radiant_score": "radiant_score",
-      "radiant_team_id": "radiant_team_id"
+      "radiant_team_id": {
+        "field_name": "team_id",
+        "table_name": "teams_dict"
+      }
     },
     "unique_field": "match_id",
     "table_name_dwh": "pro_matches_fact",

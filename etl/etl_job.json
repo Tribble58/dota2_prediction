@@ -1,0 +1,12 @@
+{
+  "stage": "job",
+  "start_time": "",
+  "end_time": "",
+  "data": [],
+  "logs": {
+    "Try: 0": "Job was initialized successfully"
+  },
+  "meta": {
+    "job_uid": "5b25a209-b862-40b8-a344-e97ae3de1719"
+  }
+}

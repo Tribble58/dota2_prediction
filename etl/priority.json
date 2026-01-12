@@ -2,7 +2,7 @@
   {
     "table_name": "heroes",
     "url": "https://api.opendota.com/api/heroes",
-    "to_load": true
+    "to_load": false
   },
   {
     "table_name": "hero_stats",
@@ -17,7 +17,7 @@
   {
     "table_name": "pro_players",
     "url": "https://api.opendota.com/api/proPlayers",
-    "to_load": false
+    "to_load": true
   },
   {
     "table_name": "leagues",
@@ -27,12 +27,12 @@
   {
     "table_name": "pro_players_heroes",
     "url": "https://api.opendota.com/api/players/<id>/heroes",
-    "to_load": false
+    "to_load": true
   },
   {
     "table_name": "pro_matches",
     "url": "https://api.opendota.com/api/proMatches",
-    "to_load": false
+    "to_load": true
   },
   {
     "table_name": "heroes_matchups",
